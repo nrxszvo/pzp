@@ -1,0 +1,25 @@
+[build-system]
+requires = [
+    "setuptools>=64",
+    "wheel",
+    "Cython>=3.0.0",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pgnzstparser"
+version = "0.1.0"
+description = "A parser for PGN files using Zstandard compression"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Michael Horgan"}
+]
+dependencies = []
+
+[tool.setuptools]
+packages = ["pgnzstparser"]
+zip-safe = false  # Required for binary extensions
+
+[tool.cython]
+language_level = "3"
