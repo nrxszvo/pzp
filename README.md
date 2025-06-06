@@ -1,5 +1,5 @@
 # pzp
-Decode and parse pgns in zst format, such as those from the [lichess database](https://database.lichess.org/) and save the data to [parquet files](https://parquet.apache.org/).  
+Decode and parse zst archives containing pgn files, such as those from the [lichess database](https://database.lichess.org/), and save the data to [parquet files](https://parquet.apache.org/).  
 
 ## Usage
 ```python
