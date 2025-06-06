@@ -1,10 +1,10 @@
 from .pgnzstparser import PyParserPool
 
 
-class ParserPool():
+class ParserPool:
     def __init__(
         self,
-        nSimultaneous=1, 
+        nSimultaneous=1,
         nReadersPerFile=2,
         nParsersPerFile=4,
         minSec=0,
@@ -14,11 +14,11 @@ class ParserPool():
         chunkSize=1024 * 1024,
         printFreq=1,
         printOffset=1,
-        outdir='pzp-output'
+        outdir="pzp-output",
     ):
-        '''
+        """
         Initialize a parser pool with the given parameters.
-        
+
         Args:
             nSimultaneous: Number of files to process simultaneously.
             nReadersPerFile: Number of readers per file.
@@ -31,7 +31,7 @@ class ParserPool():
             printFreq: Frequency of progress printing.
             printOffset: Offset for progress printing.
             outdir: Output directory for parsed files.
-        '''
+        """
         if maxSec is None:
             maxSec = 10800
         if maxInc is None:
@@ -47,16 +47,26 @@ class ParserPool():
         assert printFreq >= 1
         assert printOffset >= 1
         assert outdir is not None
-        
-        self._pool = PyParserPool(nReadersPerFile, nParsersPerFile, minSec, maxSec, maxInc, outdir, elo_edges, chunkSize, printFreq, nSimultaneous, printOffset)
+
+        self._pool = PyParserPool(
+            nReadersPerFile,
+            nParsersPerFile,
+            minSec,
+            maxSec,
+            maxInc,
+            outdir,
+            elo_edges,
+            chunkSize,
+            printFreq,
+            nSimultaneous,
+            printOffset,
+        )
 
     def enqueue(self, file_path: str, name: str):
-        self._pool.enqueue(file_path, name)   
+        self._pool.enqueue(file_path, name)
 
     def join(self):
-        self._pool.join()  
+        self._pool.join()
 
     def numCompleted(self):
         return self._pool.numCompleted()
-
-            
