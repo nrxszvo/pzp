@@ -2,7 +2,7 @@
 # cython: language_level=3
 
 from libcpp.string cimport string
-from libcpp cimport bool
+from libcpp.vector cimport vector
 
 cdef extern from "parserPool.h":
     cdef cppclass ParserPool:
@@ -11,7 +11,7 @@ cdef extern from "parserPool.h":
                   size_t numThreads, int printOffset) except +
         void join()
         void enqueue(string zst, string name)
-        int numCompleted()
+        vector[string] getCompleted()
 
 cdef class PyParserPool:
     cdef ParserPool* _pool
@@ -43,6 +43,6 @@ cdef class PyParserPool:
         if self._pool != NULL:
             self._pool.enqueue(zst.encode('utf-8'), name.encode('utf-8'))
     
-    def numCompleted(self):
+    def get_completed(self):
         if self._pool != NULL:
-            return self._pool.numCompleted()
+            return self._pool.getCompleted()

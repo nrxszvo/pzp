@@ -68,5 +68,5 @@ class ParserPool:
     def join(self):
         self._pool.join()
 
-    def numCompleted(self):
-        return self._pool.numCompleted()
+    def get_completed(self):
+        return self._pool.get_completed()

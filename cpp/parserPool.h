@@ -14,7 +14,7 @@
 class ParserPool {
 public:
     ParserPool(int nReaders, int nMoveProcessors, int minSec, int maxSec, int maxInc, std::string outdir, std::string elo_edges, size_t chunkSize, int printFreq, size_t numThreads, int printOffset)
-        : stop_(false), curProcess(0), nCompleted(0)
+        : stop_(false), curProcess(0)
     {
 		writer = std::make_shared<EloWriter>(outdir, elo_edges, chunkSize);
         std::cout << "\033[2J" << std::flush;
@@ -53,7 +53,7 @@ public:
                             std::cout << "\033[" << i + offset << "H\033[K";
                         }
                         std::cout << "\033[" << printOffset + numThreads * (2+nReaders) << "H" << std::flush;
-                        nCompleted++;
+                        completed.push_back(name);
                     }
                 }
             });
@@ -78,10 +78,11 @@ public:
         cv_.notify_one();
     }
 
-    int numCompleted() {
-        return nCompleted;
+    std::vector<std::string> getCompleted() {
+        std::unique_lock<std::mutex> lock(print_mutex_);
+        return completed;
     }
-
+        
 private:
     std::shared_ptr<EloWriter> writer;
     std::vector<std::thread> threads_;
@@ -91,7 +92,7 @@ private:
     std::condition_variable cv_;
     bool stop_;
     int curProcess;
-    int nCompleted;
+    std::vector<std::string> completed;
 };
 
 #endif
