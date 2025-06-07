@@ -46,9 +46,11 @@ build_dir = 'build'
 if sys.platform == "darwin":
     system_lib_dir = "/opt/homebrew/lib"  # System libraries
     system_include_dir = "/opt/homebrew/include"  # System includes
+    loader_path = '@loader_path'
 else:
     system_lib_dir = "/usr/lib"  # System libraries
     system_include_dir = "/usr/include"  # System includes
+    loader_path = '$ORIGIN'
 
 extension = Extension(
     "pgnzstparser",
@@ -76,7 +78,7 @@ extension = Extension(
     language="c++",
     extra_compile_args=["-std=c++20"],
     extra_link_args=[
-        "-Wl,-rpath,@loader_path",  # Look for libraries in same dir as module
+        f"-Wl,-rpath,{loader_path}",  # Look for libraries in same dir as module
     ],
 )
 

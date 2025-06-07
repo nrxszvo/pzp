@@ -69,4 +69,7 @@ class ParserPool:
         self._pool.join()
 
     def get_completed(self):
-        return self._pool.get_completed()
+        names = self._pool.get_completed()
+        counts = self._pool.get_ngames()
+        return [(name.decode('utf-8'), ngames) for name, ngames in zip(names, counts)]
+

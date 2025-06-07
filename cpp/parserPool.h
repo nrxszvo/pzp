@@ -54,6 +54,7 @@ public:
                         }
                         std::cout << "\033[" << printOffset + numThreads * (2+nReaders) << "H" << std::flush;
                         completed.push_back(name);
+			counts.push_back(ngames);
                     }
                 }
             });
@@ -82,6 +83,10 @@ public:
         std::unique_lock<std::mutex> lock(print_mutex_);
         return completed;
     }
+    std::vector<int64_t> getNGames() {
+        std::unique_lock<std::mutex> lock(print_mutex_);
+	return counts;
+    }
         
 private:
     std::shared_ptr<EloWriter> writer;
@@ -93,6 +98,7 @@ private:
     bool stop_;
     int curProcess;
     std::vector<std::string> completed;
+    std::vector<int64_t> counts;
 };
 
 #endif
