@@ -1,4 +1,4 @@
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext as build_ext_orig
 from Cython.Build import cythonize
 import pathlib
@@ -83,7 +83,8 @@ extension = Extension(
 )
 
 setup(
-        name='pzp',
+    name='pzp',
+    version="0.1.0",
     ext_modules=cythonize(
         [extension],
         language_level=3,
@@ -91,4 +92,6 @@ setup(
     cmdclass={
         'build_ext': build_ext,
     },
+    packages=find_packages(where='src'),
+    package_dir={'': 'src'},
 )
