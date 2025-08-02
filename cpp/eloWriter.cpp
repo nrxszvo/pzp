@@ -46,7 +46,7 @@ EloWriter::EloWriter(std::string output_dir, std::vector<int> elo_edges, int64_t
         std::vector<std::shared_ptr<ParsedData>> i_data;
         std::string welo;
         if (i == elo_edges.size()) {
-            welo = ">" + std::to_string(elo_edges.back());
+            welo = std::to_string(elo_edges.back()) + "+";
         } else {
             welo = std::to_string(elo_edges[i]);
         }
@@ -54,7 +54,7 @@ EloWriter::EloWriter(std::string output_dir, std::vector<int> elo_edges, int64_t
         for (size_t j = 0; j <= elo_edges.size(); ++j) {
             std::string belo;
             if (j == elo_edges.size()) {
-                belo = ">" + std::to_string(elo_edges.back());
+                belo = std::to_string(elo_edges.back()) + "+";
             } else {
                 belo = std::to_string(elo_edges[j]);
             }
