@@ -3,9 +3,8 @@ import subprocess
 import os
 
 devnull = open(os.devnull, 'w')
-
 # Create a parser pool with 2 readers, 2 move processors
-pool = ParserPool(outdir='test/output', printOffset=3, nSimultaneous=3)
+pool = ParserPool(outdir='test/output', printOffset=3, nSimultaneous=3, nReadersPerFile=2, nParsersPerFile=4)
 
 # Try adding a file to process
 with open("test/list.txt") as f:

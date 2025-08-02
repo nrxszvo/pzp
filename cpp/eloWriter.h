@@ -12,7 +12,7 @@
 
 class EloWriter {
 public:
-    EloWriter(std::string output_dir, std::string elo_edges_str, int64_t chunk_size);
+    EloWriter(std::string output_dir, std::vector<int> elo_edges, int64_t chunk_size);
     void close();
     void queueBatch(std::shared_ptr<ParsedData> batch);
     void writeBatch(std::shared_ptr<ParsedData> batch);
@@ -25,6 +25,7 @@ private:
     std::vector<std::vector<std::shared_ptr<ParsedData>>> data;
     std::vector<int> elo_edges;
     int64_t chunk_size;
+    std::vector<std::vector<int64_t>> cur_idx;
 };
 
 #endif

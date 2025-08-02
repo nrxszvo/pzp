@@ -8,10 +8,10 @@ class ParserPool:
         nReadersPerFile=2,
         nParsersPerFile=4,
         minSec=0,
-        maxSec=None,
-        maxInc=None,
-        elo_edges="1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000,4000",
-        chunkSize=1024 * 1024,
+        maxSec=2**31-1,
+        maxInc=2**31-1,
+        elo_edges=[1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000],
+        chunkSize=1024,
         printFreq=1,
         printOffset=1,
         outdir="pzp-output",
@@ -32,11 +32,6 @@ class ParserPool:
             printOffset: Offset for progress printing.
             outdir: Output directory for parsed files.
         """
-        if maxSec is None:
-            maxSec = 10800
-        if maxInc is None:
-            maxInc = 60
-
         assert nSimultaneous >= 1
         assert nReadersPerFile >= 1
         assert nParsersPerFile >= 1

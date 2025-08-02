@@ -7,21 +7,21 @@ from libcpp.vector cimport vector
 cdef extern from "parserPool.h":
     cdef cppclass ParserPool:
         ParserPool(int nReaders, int nMoveProcessors, int minSec, int maxSec, int maxInc,
-                  string outdir, string elo_edges, size_t chunkSize, int printFreq,
+                  string outdir, vector[int] elo_edges, size_t chunkSize, int printFreq,
                   size_t numThreads, int printOffset) except +
         void join()
         void enqueue(string zst, string name)
         vector[string] getCompleted()
-        vector[long] getNGames()
+        vector[long long] getNGames()
 
 cdef class PyParserPool:
     cdef ParserPool* _pool
 
     def __cinit__(self, int nReaders, int nMoveProcessors, int minSec, int maxSec, int maxInc,
-                  str outdir, str elo_edges, size_t chunkSize, int printFreq,
+                  str outdir, vector[int] elo_edges, size_t chunkSize, int printFreq,
                   size_t numThreads, int printOffset):
         self._pool = new ParserPool(nReaders, nMoveProcessors, minSec, maxSec, maxInc,
-                                  outdir.encode('utf-8'), elo_edges.encode('utf-8'),
+                                  outdir.encode('utf-8'), elo_edges,
                                   chunkSize, printFreq, numThreads, printOffset)
 
     def __dealloc__(self):

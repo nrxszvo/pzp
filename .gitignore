@@ -1,0 +1,8 @@
+.DS_Store
+build
+dist
+env
+__pycache__
+cpp/pgnzstparser.cpp
+*.egg-info
+*.zst

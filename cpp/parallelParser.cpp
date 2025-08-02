@@ -55,7 +55,7 @@ void loadGamesZst(GameState gs, std::string zst, size_t frameStart, size_t frame
 						gs.gamesQ->push(games);
 					}
 					gs.gamesCv->notify_one();
-					games = std::make_shared<std::vector<std::shared_ptr<GameData> > >();
+					games = std::make_shared<GameDataBlock>();
 				}
 				gamestart = lineno + 1;
 				gameId++;
@@ -69,7 +69,7 @@ void loadGamesZst(GameState gs, std::string zst, size_t frameStart, size_t frame
 			gs.gamesQ->push(games);
 		}
 		gs.gamesCv->notify_one();
-		games = std::make_shared<std::vector<std::shared_ptr<GameData> > >();
+		games = std::make_shared<GameDataBlock>();
 	}
 
 	{
@@ -151,7 +151,7 @@ void processGames(ProcessorState ps, int nReaders) {
 			}
 			lock.unlock();
 		}
-		std::shared_ptr<MoveDataBlock> moves = std::make_shared<MoveDataBlock>();
+		auto moves = std::make_shared<MoveDataBlock>();
 		if (games->back()->info == "FILE_DONE") {
 			if (nReadersDone==nReaders) {
 				std::lock_guard<std::mutex> lock(*ps.outputMtx);
@@ -204,7 +204,6 @@ ParallelParser::ParallelParser(int nReaders, int nMoveProcessors, int minSec, in
 
 
 int64_t ParallelParser::parse(std::string zst, std::string name, int offset, int printFreq, std::mutex& print_mtx) {
-	std::shared_ptr<ParsedData> output = std::make_shared<ParsedData>();
 	int64_t ngames = 0;
 	int64_t nValidGames = 0;
 	std::vector<int64_t> nGamesLastUpdate(nReaders, 0);
@@ -240,6 +239,9 @@ int64_t ParallelParser::parse(std::string zst, std::string name, int offset, int
 	auto start = hrc::now();
 	auto lastPrintTime = std::vector<hrc::time_point>(nReaders, start);
 		
+	std::shared_ptr<ParsedData> output = std::make_shared<ParsedData>(chunkSize);
+	int curOutputNgames = 0;
+
 	while (ngames < totalGames || nFinished < nMoveProcessors) {
 		std::shared_ptr<MoveDataBlock> moves;
 		{
@@ -258,20 +260,22 @@ int64_t ParallelParser::parse(std::string zst, std::string name, int offset, int
 			} else if (md->info == "INVALID") {
 				ngames++;
 			} else if (md->info == "GAME") {
-				output->welos.push_back(md->welo);
-				output->belos.push_back(md->belo);
-				output->timeCtl.push_back(md->time);
-				output->increment.push_back(md->inc);
-				output->mvs.push_back(md->mvs);
-				output->clk.push_back(md->clk);
-				output->eval.push_back(md->eval);
-				output->result.push_back(md->result);
+				output->welos[curOutputNgames] = md->welo;
+				output->belos[curOutputNgames] = md->belo;
+				output->timeCtl[curOutputNgames] = md->time;
+				output->increment[curOutputNgames] = md->inc;
+				output->mvs[curOutputNgames] = md->mvs;
+				output->clk[curOutputNgames] = md->clk;
+				output->eval[curOutputNgames] = md->eval;
+				output->result[curOutputNgames] = md->result;
 				ngames++;
 				nValidGames++;
+				curOutputNgames++;
 		
-				if (nValidGames % chunkSize == 0) {
+				if (curOutputNgames == chunkSize) {
 					writer->queueBatch(output);
-					output = std::make_shared<ParsedData>();
+					output = std::make_shared<ParsedData>(chunkSize);
+					curOutputNgames = 0;
 				}
 
 				if (ellapsedGTE(lastPrintTime[md->pid], printFreq)) {
@@ -296,7 +300,7 @@ int64_t ParallelParser::parse(std::string zst, std::string name, int offset, int
 			}
 		}
 	}
-	if (output->result.size() > 0) {
+	if (curOutputNgames > 0) {
 		writer->queueBatch(output);
 	}
 	for (auto gt: gameThreads) {

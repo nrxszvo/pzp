@@ -1,6 +1,5 @@
 #include "eloWriter.h"
 #include <filesystem>
-#include <absl/strings/str_split.h>
 #include <iostream>
 
 namespace fs = std::filesystem;
@@ -22,19 +21,6 @@ void processBatches(EloWriter* writer, std::queue<std::shared_ptr<ParsedData> >&
     }
 }
 
-// Helper function to parse Elo edges
-std::vector<int> ParseEloEdges(const std::string& elo_edges_str) {
-    std::vector<std::string> edges = absl::StrSplit(elo_edges_str, ',');
-    std::vector<int> result;
-    result.reserve(edges.size());
-    
-    for (const auto& edge : edges) {
-        result.push_back(std::stoi(edge));
-    }
-    std::sort(result.begin(), result.end());
-    return result;
-}
-
 // Helper function to get Elo bucket for a rating
 size_t GetEloBucket(int rating, const std::vector<int>& edges) {
     return std::upper_bound(edges.begin(), edges.end(), rating) - edges.begin();
@@ -47,24 +33,35 @@ void EnsureDirectoryExists(const fs::path& dir) {
     }
 }
 
-EloWriter::EloWriter(std::string output_dir, std::string elo_edges_str, int64_t chunk_size):
-    elo_edges(ParseEloEdges(elo_edges_str)),
+EloWriter::EloWriter(std::string output_dir, std::vector<int> elo_edges, int64_t chunk_size):
+    elo_edges(elo_edges),
     chunk_size(chunk_size) {
 
     fs::path base_output_dir(output_dir);
     EnsureDirectoryExists(base_output_dir);
 
     // Create subdirectories
-    for (size_t i = 0; i < elo_edges.size(); ++i) {
+    for (size_t i = 0; i <= elo_edges.size(); ++i) {
         std::vector<std::shared_ptr<ParquetWriter>> i_writers;
         std::vector<std::shared_ptr<ParsedData>> i_data;
-        std::string welo = std::to_string(elo_edges[i]);
-        for (size_t j = 0; j < elo_edges.size(); ++j) {
-            std::string belo = std::to_string(elo_edges[j]);
+        std::string welo;
+        if (i == elo_edges.size()) {
+            welo = ">" + std::to_string(elo_edges.back());
+        } else {
+            welo = std::to_string(elo_edges[i]);
+        }
+        cur_idx.push_back(std::vector<int64_t>(elo_edges.size() + 1, 0));
+        for (size_t j = 0; j <= elo_edges.size(); ++j) {
+            std::string belo;
+            if (j == elo_edges.size()) {
+                belo = ">" + std::to_string(elo_edges.back());
+            } else {
+                belo = std::to_string(elo_edges[j]);
+            }
             fs::path elo_dir = base_output_dir / welo / belo;
             EnsureDirectoryExists(elo_dir);
             i_writers.push_back(std::make_shared<ParquetWriter>(elo_dir.string()));
-            i_data.push_back(std::make_shared<ParsedData>());
+            i_data.push_back(std::make_shared<ParsedData>(chunk_size));
         }
         writers.push_back(i_writers);
         data.push_back(i_data);
@@ -76,15 +73,15 @@ EloWriter::EloWriter(std::string output_dir, std::string elo_edges_str, int64_t 
 void EloWriter::close() {
     {
         std::lock_guard<std::mutex> lock(batchMtx);
-        batchQ.push(std::make_shared<ParsedData>());
+        batchQ.push(std::make_shared<ParsedData>(0));
     }
     batchCv.notify_all();
     procBatchThread->join();
 
     for (int i = 0; i< elo_edges.size(); i++) {
         for (int j = 0; j < elo_edges.size(); j++) {
-            if (data[i][j]->mvs.size() > 0) {
-                auto result = writers[i][j]->write(data[i][j]);
+            if (cur_idx[i][j] > 0) {
+                auto result = writers[i][j]->write(data[i][j], cur_idx[i][j]);
                 if (!result.ok()) {
                     throw std::runtime_error("Error writing table: " + result.status().ToString());
                 }
@@ -110,21 +107,23 @@ void EloWriter::writeBatch(std::shared_ptr<ParsedData> batch) {
         size_t wBucket = GetEloBucket(wElo, elo_edges);
         size_t bBucket = GetEloBucket(bElo, elo_edges);
         auto ij_data = data[wBucket][bBucket];
-        ij_data->mvs.push_back(batch->mvs[i]);
-        ij_data->clk.push_back(batch->clk[i]);
-        ij_data->eval.push_back(batch->eval[i]);
-        ij_data->result.push_back(batch->result[i]);
-        ij_data->welos.push_back(wElo);
-        ij_data->belos.push_back(bElo);
-        ij_data->timeCtl.push_back(batch->timeCtl[i]);
-        ij_data->increment.push_back(batch->increment[i]);
-
-        if (ij_data->mvs.size() >= chunk_size) {
-            auto result = writers[wBucket][bBucket]->write(ij_data);
+        auto idx = cur_idx[wBucket][bBucket];
+        ij_data->mvs[idx] = batch->mvs[i];
+        ij_data->clk[idx] = batch->clk[i];
+        ij_data->eval[idx] = batch->eval[i];
+        ij_data->result[idx] = batch->result[i];
+        ij_data->welos[idx] = wElo;
+        ij_data->belos[idx] = bElo;
+        ij_data->timeCtl[idx] = batch->timeCtl[i];
+        ij_data->increment[idx] = batch->increment[i];
+        cur_idx[wBucket][bBucket]++;
+        if (cur_idx[wBucket][bBucket] == chunk_size) {
+            auto result = writers[wBucket][bBucket]->write(ij_data, chunk_size);
             if (!result.ok()) {
                 throw std::runtime_error("Error writing table: " + result.status().ToString());
             }
-            data[wBucket][bBucket] = std::make_shared<ParsedData>();
+            data[wBucket][bBucket] = std::make_shared<ParsedData>(chunk_size);
+            cur_idx[wBucket][bBucket] = 0;
         }
     }
 }

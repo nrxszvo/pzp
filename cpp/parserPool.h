@@ -13,11 +13,28 @@
 
 class ParserPool {
 public:
-    ParserPool(int nReaders, int nMoveProcessors, int minSec, int maxSec, int maxInc, std::string outdir, std::string elo_edges, size_t chunkSize, int printFreq, size_t numThreads, int printOffset)
+    ParserPool(int nReaders, int nMoveProcessors, int minSec, int maxSec, int maxInc, std::string outdir, std::vector<int> elo_edges, size_t chunkSize, int printFreq, size_t numThreads, int printOffset)
         : stop_(false), curProcess(0)
     {
-		writer = std::make_shared<EloWriter>(outdir, elo_edges, chunkSize);
+        assert(nReaders >= 1);
+        assert(nMoveProcessors >= 1);
+        assert(minSec >= 0);
+        assert(maxSec >= minSec);
+        assert(maxInc >= 0);
+        assert(chunkSize >= 1);
+        assert(printFreq >= 1);
+        assert(printOffset >= 1);
+        assert(outdir != "");
+        assert(elo_edges.size() > 0);
+        for (size_t i = 1; i < elo_edges.size(); i++) {
+            assert(elo_edges[i] > elo_edges[i-1]);
+        }
+
+        int eloChunkSize = 1024;
+		writer = std::make_shared<EloWriter>(outdir, elo_edges, eloChunkSize);
+
         std::cout << "\033[2J" << std::flush;
+
         threads_.reserve(numThreads);
         for (size_t procId = 0; procId < numThreads; ++procId) {
             threads_.emplace_back([=, this] {
@@ -54,7 +71,7 @@ public:
                         }
                         std::cout << "\033[" << printOffset + numThreads * (2+nReaders) << "H" << std::flush;
                         completed.push_back(name);
-			counts.push_back(ngames);
+			            counts.push_back(ngames);
                     }
                 }
             });

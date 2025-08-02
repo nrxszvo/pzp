@@ -1,4 +1,7 @@
 #include "parquetWriter.h"
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 ParquetWriter::ParquetWriter(std::string root_path): root_path(root_path) {
     schema =
@@ -11,7 +14,12 @@ ParquetWriter::ParquetWriter(std::string root_path): root_path(root_path) {
             arrow::field("timeCtl", arrow::int16()), 
             arrow::field("increment", arrow::int16())});
 
-    PARQUET_ASSIGN_OR_THROW(outfile, arrow::io::FileOutputStream::Open(root_path + "/data.parquet"));
+    std::string fn = "data.parquet";
+    int i = 0;
+    while (fs::exists(root_path + "/" + fn)) {
+        fn = "data_" + std::to_string(i++) + ".parquet";
+    }
+    PARQUET_ASSIGN_OR_THROW(outfile, arrow::io::FileOutputStream::Open(root_path + "/" + fn));
 
     parquet::WriterProperties::Builder builder;
     builder.compression(parquet::Compression::ZSTD);
@@ -30,7 +38,7 @@ ParquetWriter::ParquetWriter(std::string root_path): root_path(root_path) {
     result_builder = arrow::NumericBuilder<arrow::Int8Type>(pool);
 }
 
-arrow::Result<std::string> ParquetWriter::write(std::shared_ptr<ParsedData> res) {
+arrow::Result<std::string> ParquetWriter::write(std::shared_ptr<ParsedData> res, size_t size) {
     mv_builder.Reset();
     clk_builder.Reset();
     welo_builder.Reset();
@@ -40,8 +48,7 @@ arrow::Result<std::string> ParquetWriter::write(std::shared_ptr<ParsedData> res)
     result_builder.Reset();
     eval_builder.Reset();
 
-	size_t nRows = res->mvs.size();
-    for (size_t j=0; j<nRows; j++) {
+    for (size_t j=0; j<size; j++) {
         ARROW_RETURN_NOT_OK(mv_builder.Append(res->mvs[j]));
         ARROW_RETURN_NOT_OK(clk_builder.Append(res->clk[j]));
         ARROW_RETURN_NOT_OK(eval_builder.Append(res->eval[j]));
@@ -70,7 +77,7 @@ arrow::Result<std::string> ParquetWriter::write(std::shared_ptr<ParsedData> res)
     ARROW_RETURN_NOT_OK(increment_builder.Finish(&increment));
     ARROW_RETURN_NOT_OK(result_builder.Finish(&result));
 
-    auto batch = arrow::RecordBatch::Make(schema, nRows, {moves, clk, eval, result, welos, belos, timeCtl, increment});
+    auto batch = arrow::RecordBatch::Make(schema, size, {moves, clk, eval, result, welos, belos, timeCtl, increment});
     PARQUET_THROW_NOT_OK(parquet_writer->WriteRecordBatch(*batch));
 
     return root_path;

@@ -13,5 +13,16 @@ struct ParsedData {
 	std::vector<int8_t> result;
 	std::vector<std::string> clk;
 	std::vector<std::string> eval;
+	ParsedData(int chunkSize) {
+		welos.resize(chunkSize);
+		belos.resize(chunkSize);
+		timeCtl.resize(chunkSize);
+		increment.resize(chunkSize);
+		gamestarts.resize(chunkSize);
+		mvs.resize(chunkSize);
+		result.resize(chunkSize);
+		clk.resize(chunkSize);
+		eval.resize(chunkSize);
+	}
 };
 #endif
