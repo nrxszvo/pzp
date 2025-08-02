@@ -12,7 +12,7 @@ cdef extern from "parserPool.h":
         void join()
         void enqueue(string zst, string name)
         vector[string] getCompleted()
-        vector[long long] getNGames()
+        vector[long] getNGames()
 
 cdef class PyParserPool:
     cdef ParserPool* _pool

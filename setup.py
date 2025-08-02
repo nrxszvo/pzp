@@ -83,6 +83,7 @@ extension = Extension(
 )
 
 setup(
+        name='pzp',
     ext_modules=cythonize(
         [extension],
         language_level=3,
