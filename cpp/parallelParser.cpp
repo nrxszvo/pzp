@@ -290,7 +290,7 @@ int64_t ParallelParser::parse(std::string zst, std::string name, int offset, int
 										"% done, games/sec: " + std::to_string(gamesPerSec) + ", eta: " + eta;
 					int thisOffset = offset + md->pid + 1;
 					{
-                        std::lock_guard<std::mutex> lock(print_mtx);
+                        //std::lock_guard<std::mutex> lock(print_mtx);
 						info[thisOffset] = status;
 					}
 				}

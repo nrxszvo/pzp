@@ -55,13 +55,13 @@ public:
                     auto start = std::chrono::high_resolution_clock::now();
                     auto offset = procId * (2+nReaders);
                     {
-                        std::lock_guard<std::mutex> lock(print_mutex_);
+                        //std::lock_guard<std::mutex> lock(print_mutex_);
                         info[offset] = std::to_string(thisProc) + ": parsing " + name + "...";
                     }
                     auto ngames = parser.parse(zst, name, offset, printFreq, print_mutex_, info);
                     auto stop = std::chrono::high_resolution_clock::now();
                     {
-                        std::lock_guard<std::mutex> lock(print_mutex_);
+                        //std::lock_guard<std::mutex> lock(print_mutex_);
                         info[offset] = std::to_string(thisProc) + ": finished parsing " + std::to_string(ngames) + " games from " + name + " in " + getEllapsedStr(start, stop);
                         for (int i = 1; i <= nReaders; i++) {
                             info[i + offset] = "";
@@ -93,15 +93,15 @@ public:
     }
 
     std::vector<std::string> getCompleted() {
-        std::unique_lock<std::mutex> lock(print_mutex_);
+        //std::unique_lock<std::mutex> lock(print_mutex_);
         return completed;
     }
     std::vector<int64_t> getNGames() {
-        std::unique_lock<std::mutex> lock(print_mutex_);
+        //std::unique_lock<std::mutex> lock(print_mutex_);
     	return counts;
     }
     std::vector<std::string> getInfo() {
-        std::unique_lock<std::mutex> lock(print_mutex_);
+        //std::unique_lock<std::mutex> lock(print_mutex_);
     	return info;
     }        
 private:
