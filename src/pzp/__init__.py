@@ -68,3 +68,7 @@ class ParserPool:
         counts = self._pool.get_ngames()
         return [(name.decode('utf-8'), ngames) for name, ngames in zip(names, counts)]
 
+    def get_info(self):
+        info = self._pool.get_info()
+        return [line.decode('utf-8') for line in info]
+        

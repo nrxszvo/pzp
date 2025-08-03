@@ -14,7 +14,7 @@
 class ParserPool {
 public:
     ParserPool(int nReaders, int nMoveProcessors, int minSec, int maxSec, int maxInc, std::string outdir, std::vector<int> elo_edges, size_t chunkSize, int printFreq, size_t numThreads, int printOffset)
-        : stop_(false), curProcess(0)
+        : stop_(false), curProcess(0), info(numThreads*(2+nReaders))
     {
         assert(nReaders >= 1);
         assert(nMoveProcessors >= 1);
@@ -32,9 +32,6 @@ public:
 
         int eloChunkSize = 1024;
 		writer = std::make_shared<EloWriter>(outdir, elo_edges, eloChunkSize);
-
-        std::cout << "\033[2J" << std::flush;
-
         threads_.reserve(numThreads);
         for (size_t procId = 0; procId < numThreads; ++procId) {
             threads_.emplace_back([=, this] {
@@ -56,20 +53,19 @@ public:
                         thisProc = curProcess++;
                     }
                     auto start = std::chrono::high_resolution_clock::now();
-                    auto offset = printOffset + procId * (2+nReaders);
+                    auto offset = procId * (2+nReaders);
                     {
                         std::lock_guard<std::mutex> lock(print_mutex_);
-                        std::cout << "\033[" << offset << "H\033[K" << thisProc << ": parsing " << name << "..." << std::flush;
+                        info[offset] = std::to_string(thisProc) + ": parsing " + name + "...";
                     }
-                    auto ngames = parser.parse(zst, name, offset, printFreq, print_mutex_);
+                    auto ngames = parser.parse(zst, name, offset, printFreq, print_mutex_, info);
                     auto stop = std::chrono::high_resolution_clock::now();
                     {
                         std::lock_guard<std::mutex> lock(print_mutex_);
-                        std::cout << "\033[" << offset << "H\033[K" << thisProc << ": finished parsing " << ngames << " games from " << name << " in " << getEllapsedStr(start, stop);
+                        info[offset] = std::to_string(thisProc) + ": finished parsing " + std::to_string(ngames) + " games from " + name + " in " + getEllapsedStr(start, stop);
                         for (int i = 1; i <= nReaders; i++) {
-                            std::cout << "\033[" << i + offset << "H\033[K";
+                            info[i + offset] = "";
                         }
-                        std::cout << "\033[" << printOffset + numThreads * (2+nReaders) << "H" << std::flush;
                         completed.push_back(name);
 			            counts.push_back(ngames);
                     }
@@ -102,9 +98,12 @@ public:
     }
     std::vector<int64_t> getNGames() {
         std::unique_lock<std::mutex> lock(print_mutex_);
-	return counts;
+    	return counts;
     }
-        
+    std::vector<std::string> getInfo() {
+        std::unique_lock<std::mutex> lock(print_mutex_);
+    	return info;
+    }        
 private:
     std::shared_ptr<EloWriter> writer;
     std::vector<std::thread> threads_;
@@ -116,6 +115,7 @@ private:
     int curProcess;
     std::vector<std::string> completed;
     std::vector<int64_t> counts;
+    std::vector<std::string> info;
 };
 
 #endif

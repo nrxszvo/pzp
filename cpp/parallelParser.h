@@ -79,5 +79,5 @@ class ParallelParser {
 	size_t chunkSize;
 public:
 	ParallelParser(int nReaders, int nMoveProcessors, int minSec, int maxSec, int maxInc, std::shared_ptr<EloWriter> writer, size_t chunkSize);
-	int64_t parse(std::string zst, std::string name, int offset, int printFreq, std::mutex& print_mtx);
+	int64_t parse(std::string zst, std::string name, int offset, int printFreq, std::mutex& print_mtx, std::vector<std::string>& info);
 };

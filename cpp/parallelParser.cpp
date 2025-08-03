@@ -203,7 +203,7 @@ ParallelParser::ParallelParser(int nReaders, int nMoveProcessors, int minSec, in
 	: nReaders(nReaders), nMoveProcessors(nMoveProcessors), minSec(minSec), maxSec(maxSec), maxInc(maxInc), writer(writer), chunkSize(chunkSize) {};
 
 
-int64_t ParallelParser::parse(std::string zst, std::string name, int offset, int printFreq, std::mutex& print_mtx) {
+int64_t ParallelParser::parse(std::string zst, std::string name, int offset, int printFreq, std::mutex& print_mtx, std::vector<std::string>& info) {
 	int64_t ngames = 0;
 	int64_t nValidGames = 0;
 	std::vector<int64_t> nGamesLastUpdate(nReaders, 0);
@@ -289,10 +289,9 @@ int64_t ParallelParser::parse(std::string zst, std::string name, int offset, int
 					std::string status = "\t" + name + "." + std::to_string(md->pid) + ": " + std::to_string(int(100*md->progress)) + \
 										"% done, games/sec: " + std::to_string(gamesPerSec) + ", eta: " + eta;
 					int thisOffset = offset + md->pid + 1;
-					std::string cursorJump = "\033[" + std::to_string(thisOffset) + "H\033[K";
 					{
                         std::lock_guard<std::mutex> lock(print_mtx);
-						std::cout << cursorJump << status << "\r" << std::flush;
+						info[thisOffset] = status;
 					}
 				}
 			} else {
