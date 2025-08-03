@@ -13,6 +13,7 @@ Decode and parse zst archives containing pgn files, such as those from the [lich
 - Python 3.13
 - setuptools
 - cython
+- wheel
 
 ## Installation
 ```bash

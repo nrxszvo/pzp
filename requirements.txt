@@ -1,0 +1,4 @@
+setuptools
+cython
+wheel
+arrow

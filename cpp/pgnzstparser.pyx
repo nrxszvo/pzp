@@ -8,7 +8,7 @@ cdef extern from "parserPool.h":
     cdef cppclass ParserPool:
         ParserPool(int nReaders, int nMoveProcessors, int minSec, int maxSec, int maxInc,
                   string outdir, vector[int] elo_edges, size_t chunkSize, int printFreq,
-                  size_t numThreads, int printOffset) except +
+                  size_t numThreads) except +
         void join()
         void enqueue(string zst, string name)
         vector[string] getCompleted()
@@ -20,10 +20,10 @@ cdef class PyParserPool:
 
     def __cinit__(self, int nReaders, int nMoveProcessors, int minSec, int maxSec, int maxInc,
                   str outdir, vector[int] elo_edges, size_t chunkSize, int printFreq,
-                  size_t numThreads, int printOffset):
+                  size_t numThreads):
         self._pool = new ParserPool(nReaders, nMoveProcessors, minSec, maxSec, maxInc,
                                   outdir.encode('utf-8'), elo_edges,
-                                  chunkSize, printFreq, numThreads, printOffset)
+                                  chunkSize, printFreq, numThreads)
 
     def __dealloc__(self):
         if self._pool != NULL:

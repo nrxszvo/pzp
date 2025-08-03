@@ -13,7 +13,18 @@
 
 class ParserPool {
 public:
-    ParserPool(int nReaders, int nMoveProcessors, int minSec, int maxSec, int maxInc, std::string outdir, std::vector<int> elo_edges, size_t chunkSize, int printFreq, size_t numThreads, int printOffset)
+    ParserPool(
+        int nReaders,
+        int nMoveProcessors,
+        int minSec,
+        int maxSec,
+        int maxInc,
+        std::string outdir,
+        std::vector<int> elo_edges,
+        size_t chunkSize,
+        int printFreq,
+        size_t numThreads
+    )
         : stop_(false), curProcess(0), info(numThreads*(2+nReaders))
     {
         assert(nReaders >= 1);
@@ -23,7 +34,6 @@ public:
         assert(maxInc >= 0);
         assert(chunkSize >= 1);
         assert(printFreq >= 1);
-        assert(printOffset >= 1);
         assert(outdir != "");
         assert(elo_edges.size() > 0);
         for (size_t i = 1; i < elo_edges.size(); i++) {
@@ -36,7 +46,15 @@ public:
         for (size_t procId = 0; procId < numThreads; ++procId) {
             threads_.emplace_back([=, this] {
                 int thisProc;
-                ParallelParser parser(nReaders, nMoveProcessors, minSec, maxSec, maxInc, writer, chunkSize);
+                ParallelParser parser(
+                    nReaders,
+                    nMoveProcessors,
+                    minSec,
+                    maxSec,
+                    maxInc,
+                    writer,
+                    chunkSize
+                );
                 while (true) {
                     std::string zst;
                     std::string name;
