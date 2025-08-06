@@ -6,6 +6,8 @@
 struct ParsedData {
 	std::vector<int16_t> welos;
 	std::vector<int16_t> belos;
+	std::vector<std::string> whites;
+	std::vector<std::string> blacks;
 	std::vector<int16_t> timeCtl;
 	std::vector<int16_t> increment;
 	std::vector<int64_t> gamestarts;
@@ -16,6 +18,8 @@ struct ParsedData {
 	ParsedData(int chunkSize) {
 		welos.resize(chunkSize);
 		belos.resize(chunkSize);
+		whites.resize(chunkSize);
+		blacks.resize(chunkSize);
 		timeCtl.resize(chunkSize);
 		increment.resize(chunkSize);
 		gamestarts.resize(chunkSize);

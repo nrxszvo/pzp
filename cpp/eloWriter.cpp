@@ -114,6 +114,8 @@ void EloWriter::writeBatch(std::shared_ptr<ParsedData> batch) {
         ij_data->result[idx] = batch->result[i];
         ij_data->welos[idx] = wElo;
         ij_data->belos[idx] = bElo;
+        ij_data->whites[idx] = batch->whites[i];
+        ij_data->blacks[idx] = batch->blacks[i];
         ij_data->timeCtl[idx] = batch->timeCtl[i];
         ij_data->increment[idx] = batch->increment[i];
         cur_idx[wBucket][bBucket]++;

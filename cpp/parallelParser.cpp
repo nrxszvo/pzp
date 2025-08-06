@@ -45,6 +45,8 @@ void loadGamesZst(GameState gs, std::string zst, size_t frameStart, size_t frame
 					processor.getBelo(), 
 					processor.getTime(),
 					processor.getInc(),
+					processor.getWhite(),
+					processor.getBlack(),
 					processor.getMoveStr(),
 					zst + ":" + std::to_string(gamestart)
 				);
@@ -262,6 +264,8 @@ int64_t ParallelParser::parse(std::string zst, std::string name, int offset, int
 			} else if (md->info == "GAME") {
 				output->welos[curOutputNgames] = md->welo;
 				output->belos[curOutputNgames] = md->belo;
+				output->whites[curOutputNgames] = md->white;
+				output->blacks[curOutputNgames] = md->black;
 				output->timeCtl[curOutputNgames] = md->time;
 				output->increment[curOutputNgames] = md->inc;
 				output->mvs[curOutputNgames] = md->mvs;

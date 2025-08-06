@@ -108,6 +108,8 @@ const re2::RE2 timeRe("\\[TimeControl \"([0-9]+)\\+*([0-9]+)\"\\]");
 const re2::RE2 termRe("\\[Termination \"(.+)\"\\]");
 const re2::RE2 reW("\\[WhiteElo \"([0-9]+)\"\\]");
 const re2::RE2 reB("\\[BlackElo \"([0-9]+)\"\\]");
+const re2::RE2 reWname("\\[White \"(.+)\"\\]");
+const re2::RE2 reBname("\\[Black \"(.+)\"\\]");
 
 string processRawLine(string& line, State& state, int minSec, int maxSec, int maxInc) {
 	line.erase(remove(line.begin(), line.end(), '\n'), line.cend());
@@ -119,6 +121,10 @@ string processRawLine(string& line, State& state, int minSec, int maxSec, int ma
 				state.weloStr = line;
 			} else if (line.substr(0,9) == "[BlackElo") {
 				state.beloStr = line;
+			} else if (line.substr(0, 7) == "[White ") {
+				state.white = line;
+			} else if (line.substr(0, 7) == "[Black ") {
+				state.black = line;
 			} else if (line.substr(0,12) == "[TimeControl") {
 				int tim, inc = 0;
 				if (re2::RE2::PartialMatch(line, timeRe, &tim, &inc)) {
@@ -143,8 +149,13 @@ string processRawLine(string& line, State& state, int minSec, int maxSec, int ma
 				bool haveW = re2::RE2::PartialMatch(state.weloStr, reW, &welo);
 				bool haveB = re2::RE2::PartialMatch(state.beloStr, reB, &belo);
 				if (haveW && haveB) {
+					std::string white, black;
+					re2::RE2::PartialMatch(state.white, reWname, &white);
+					re2::RE2::PartialMatch(state.black, reBname, &black);
 					state.welo = welo;
 					state.belo = belo;
+					state.white = white;
+					state.black = black;
 					state.moveStr = line;
 					return "COMPLETE";
 				}
@@ -173,6 +184,12 @@ int PgnProcessor::getWelo() {
 }
 int PgnProcessor::getBelo() {
 	return this->state.belo;
+}
+string PgnProcessor::getWhite() {
+	return this->state.white;
+}
+string PgnProcessor::getBlack() {
+	return this->state.black;
 }
 string PgnProcessor::getMoveStr() {
 	return this->state.moveStr;

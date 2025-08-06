@@ -39,6 +39,8 @@ arrow::Status ParquetReader::ReadBatch(ParsedData& output) {
     output.result.clear();
     output.welos.clear();
     output.belos.clear();
+    output.whites.clear();
+    output.blacks.clear();
     output.timeCtl.clear();
     output.increment.clear();
 
@@ -53,6 +55,8 @@ arrow::Status ParquetReader::ReadBatch(ParsedData& output) {
     output.result.reserve(batch->num_rows());
     output.welos.reserve(batch->num_rows());
     output.belos.reserve(batch->num_rows());
+    output.whites.reserve(batch->num_rows());
+    output.blacks.reserve(batch->num_rows());
     output.timeCtl.reserve(batch->num_rows());
     output.increment.reserve(batch->num_rows());
 
@@ -63,8 +67,10 @@ arrow::Status ParquetReader::ReadBatch(ParsedData& output) {
     auto result_array = std::static_pointer_cast<arrow::Int8Array>(batch->GetColumnByName(schema->field(3)->name()));
     auto welo_array = std::static_pointer_cast<arrow::Int16Array>(batch->GetColumnByName(schema->field(4)->name()));
     auto belo_array = std::static_pointer_cast<arrow::Int16Array>(batch->GetColumnByName(schema->field(5)->name()));
-    auto timeCtl_array = std::static_pointer_cast<arrow::Int16Array>(batch->GetColumnByName(schema->field(6)->name()));
-    auto increment_array = std::static_pointer_cast<arrow::Int16Array>(batch->GetColumnByName(schema->field(7)->name()));
+    auto white_array = std::static_pointer_cast<arrow::StringArray>(batch->GetColumnByName(schema->field(6)->name()));
+    auto black_array = std::static_pointer_cast<arrow::StringArray>(batch->GetColumnByName(schema->field(7)->name()));
+    auto timeCtl_array = std::static_pointer_cast<arrow::Int16Array>(batch->GetColumnByName(schema->field(8)->name()));
+    auto increment_array = std::static_pointer_cast<arrow::Int16Array>(batch->GetColumnByName(schema->field(9)->name()));
 
     // Copy data from the batch
     for (int64_t i = 0; i < batch->num_rows(); i++) {
@@ -74,6 +80,8 @@ arrow::Status ParquetReader::ReadBatch(ParsedData& output) {
         output.result.push_back(result_array->Value(i));
         output.welos.push_back(welo_array->Value(i));
         output.belos.push_back(belo_array->Value(i));
+        output.whites.push_back(white_array->GetString(i));
+        output.blacks.push_back(black_array->GetString(i));
         output.timeCtl.push_back(timeCtl_array->Value(i));
         output.increment.push_back(increment_array->Value(i));
     }

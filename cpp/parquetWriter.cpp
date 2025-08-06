@@ -11,6 +11,8 @@ ParquetWriter::ParquetWriter(std::string root_path): root_path(root_path) {
             arrow::field("result", arrow::int8()),
             arrow::field("welo", arrow::int16()),
             arrow::field("belo", arrow::int16()),
+            arrow::field("white", arrow::utf8()),
+            arrow::field("black", arrow::utf8()),
             arrow::field("timeCtl", arrow::int16()), 
             arrow::field("increment", arrow::int16())});
 
@@ -33,6 +35,8 @@ ParquetWriter::ParquetWriter(std::string root_path): root_path(root_path) {
     eval_builder = arrow::StringBuilder(pool);	
     welo_builder = arrow::NumericBuilder<arrow::Int16Type>(pool);	
     belo_builder = arrow::NumericBuilder<arrow::Int16Type>(pool);	
+    white_builder = arrow::StringBuilder(pool);	
+    black_builder = arrow::StringBuilder(pool);	
     timeCtl_builder = arrow::NumericBuilder<arrow::Int16Type>(pool);	
     increment_builder = arrow::NumericBuilder<arrow::Int16Type>(pool);	
     result_builder = arrow::NumericBuilder<arrow::Int8Type>(pool);
@@ -43,6 +47,8 @@ arrow::Result<std::string> ParquetWriter::write(std::shared_ptr<ParsedData> res,
     clk_builder.Reset();
     welo_builder.Reset();
     belo_builder.Reset();
+    white_builder.Reset();
+    black_builder.Reset();
     timeCtl_builder.Reset();
     increment_builder.Reset();
     result_builder.Reset();
@@ -54,6 +60,8 @@ arrow::Result<std::string> ParquetWriter::write(std::shared_ptr<ParsedData> res,
         ARROW_RETURN_NOT_OK(eval_builder.Append(res->eval[j]));
         ARROW_RETURN_NOT_OK(welo_builder.Append(res->welos[j]));
         ARROW_RETURN_NOT_OK(belo_builder.Append(res->belos[j]));
+        ARROW_RETURN_NOT_OK(white_builder.Append(res->whites[j]));
+        ARROW_RETURN_NOT_OK(black_builder.Append(res->blacks[j]));
         ARROW_RETURN_NOT_OK(timeCtl_builder.Append(res->timeCtl[j]));
         ARROW_RETURN_NOT_OK(increment_builder.Append(res->increment[j]));
         ARROW_RETURN_NOT_OK(result_builder.Append(res->result[j]));
@@ -63,6 +71,8 @@ arrow::Result<std::string> ParquetWriter::write(std::shared_ptr<ParsedData> res,
     std::shared_ptr<arrow::Array> clk;
     std::shared_ptr<arrow::Array> welos;
     std::shared_ptr<arrow::Array> belos;
+    std::shared_ptr<arrow::Array> white;
+    std::shared_ptr<arrow::Array> black;
     std::shared_ptr<arrow::Array> timeCtl;
     std::shared_ptr<arrow::Array> increment;
     std::shared_ptr<arrow::Array> result;
@@ -73,11 +83,13 @@ arrow::Result<std::string> ParquetWriter::write(std::shared_ptr<ParsedData> res,
     ARROW_RETURN_NOT_OK(eval_builder.Finish(&eval));
     ARROW_RETURN_NOT_OK(welo_builder.Finish(&welos));
     ARROW_RETURN_NOT_OK(belo_builder.Finish(&belos));
+    ARROW_RETURN_NOT_OK(white_builder.Finish(&white));
+    ARROW_RETURN_NOT_OK(black_builder.Finish(&black));
     ARROW_RETURN_NOT_OK(timeCtl_builder.Finish(&timeCtl));
     ARROW_RETURN_NOT_OK(increment_builder.Finish(&increment));
     ARROW_RETURN_NOT_OK(result_builder.Finish(&result));
 
-    auto batch = arrow::RecordBatch::Make(schema, size, {moves, clk, eval, result, welos, belos, timeCtl, increment});
+    auto batch = arrow::RecordBatch::Make(schema, size, {moves, clk, eval, result, welos, belos, white, black, timeCtl, increment});
     PARQUET_THROW_NOT_OK(parquet_writer->WriteRecordBatch(*batch));
 
     return root_path;

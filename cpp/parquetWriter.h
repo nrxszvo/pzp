@@ -18,6 +18,8 @@ private:
     arrow::StringBuilder mv_builder;
     arrow::StringBuilder clk_builder;
     arrow::StringBuilder eval_builder;
+    arrow::StringBuilder white_builder;
+    arrow::StringBuilder black_builder;
     arrow::NumericBuilder<arrow::Int16Type> welo_builder;
     arrow::NumericBuilder<arrow::Int16Type> belo_builder;
     arrow::NumericBuilder<arrow::Int16Type> timeCtl_builder;

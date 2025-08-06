@@ -6,6 +6,8 @@ struct State {
 	std::string weloStr;
 	std::string beloStr;
 	int welo;
+	std::string white;
+	std::string black;
 	int belo;
 	int time;
 	int inc;
@@ -31,6 +33,8 @@ public:
 	std::string processLine(std::string& line);
 	int getWelo();
 	int getBelo();
+	std::string getWhite();
+	std::string getBlack();
 	std::string getMoveStr();
 	int getTime();
 	int getInc();

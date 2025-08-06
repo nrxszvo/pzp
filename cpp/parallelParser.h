@@ -16,23 +16,25 @@ struct Data {
 	int belo;
 	int time;
 	int inc;
+	std::string white;
+	std::string black;
 	std::string info; 
 
 	Data() {};
 	Data(int pid, std::string info): pid(pid), info(info) {};
 	Data(int pid, std::string info, int gameId): pid(pid), gameId(gameId), info(info) {};
-	Data(int pid, float progress, int gid, int welo, int belo, int time, int inc, std::string info)
-		: pid(pid), progress(progress), gameId(gid), welo(welo), belo(belo), time(time), inc(inc), info(info) {};
+	Data(int pid, float progress, int gid, int welo, int belo, int time, int inc, std::string white, std::string black, std::string info)
+		: pid(pid), progress(progress), gameId(gid), welo(welo), belo(belo), time(time), inc(inc), white(white), black(black), info(info) {};
 	Data(int pid, std::shared_ptr<Data> other)
-		: pid(pid), progress(other->progress), gameId(other->gameId), welo(other->welo), belo(other->belo), time(other->time), inc(other->inc) {};
+		: pid(pid), progress(other->progress), gameId(other->gameId), welo(other->welo), belo(other->belo), time(other->time), inc(other->inc), white(other->white), black(other->black), info(other->info) {};
 };
 
 struct GameData: Data {
 	GameData(): Data() {};
 	GameData(int pid, std::string info) : Data(pid, info) {};
 	GameData(int pid, std::string info, int gameId): Data(pid, info, gameId) {};
-	GameData(int pid, float progress, int gid, int welo, int belo, int time, int inc, std::string moveStr, std::string info) 
-		: Data(pid, progress, gid, welo, belo, time, inc, info), moveStr(moveStr) {};
+	GameData(int pid, float progress, int gid, int welo, int belo, int time, int inc, std::string white, std::string black, std::string moveStr, std::string info) 
+		: Data(pid, progress, gid, welo, belo, time, inc, white, black, info), moveStr(moveStr) {};
 
 	std::string moveStr;
 };
